@@ -1,15 +1,36 @@
-#!/bin/bsh
+#!/bin/bash
+
+# Build script for the uHbench
+# ============================
+#
+# This script is a helper tool to get the rendered files built in one go.
+# There is a pretty good chance this will not work on your system, but you can try ;)
+#
+# First, have all the right tools installed:
+# 	- BLender with Freestyle and Freestyle-SVG-exporter activated in your user.prefs 
+#	- Inkscape
+#	- ImageMagick
+#	- XMLStarlet
+#
+# Then run it with: sh build.sh 
+# And watch the console for errors. 
+# Complaints, suggestions or bitcoins, send them to julien [at] xuv.be 
+
 
 # SETTINGS
-
-# This coresponds to the names used for the scenes in the .blend file. Oviously, odn't use space in your names.
+# --------
+FILENAME=uhbench
+# This corresponds to the names used for the scenes in the .blend file. Oviously, don't use space in your names.
 STEPS=(step0 step1 step2 step3 step4 step5 step6 step7 step8)
 BUILD_DIR=build
 
+
+# BLENDER rendering
+# -----------------
 for s in ${STEPS[@]}
 do
 	# Launch Blender render for selected scene
-	blender -b uhbench.blend  -S ${s} --render-output //${BUILD_DIR}/${s}_ -f 1
+	blender -b ${FILENAME}.blend  -S ${s} --render-output //${BUILD_DIR}/${s}_ -f 1
 	
 	# Remove extra "fills" in the SVG
 	# This line should be removed once Freestyle-SVG-exporter handles toggling "Contour Fills" per lineset
@@ -20,8 +41,19 @@ done
 echo "Cleaning up..."
 rm ${BUILD_DIR}/*.png
 
+# IMAGE rendering
+# ---------------
+
 # Generate a gif ;)
 echo "Creating animated GIF..."
-convert -delay 100 -loop 0 ${BUILD_DIR}/step*.svg uHbench-loop.gif
+convert -delay 100 -loop 0 ${BUILD_DIR}/step*.svg ${FILENAME}.gif
 
-echo "Done"
+# Rendering the png, jpg and pdf
+echo "Rendering to PNG"
+inkscape -f ${FILENAME}.svg -e ${FILENAME}.png
+echo "Rendering to JPG"
+inkscape -f ${FILENAME}.svg --export-dpi 300 -e ${FILENAME}.jpg
+echo "Rendering to PDF"
+inkscape -f ${FILENAME}.svg --export-text-to-path -A ${FILENAME}.pdf 
+
+echo "Done."
